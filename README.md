@@ -1,2 +1,1 @@
-# vystar-poc
-vystar-poc
+# poc-nodejs-sample
