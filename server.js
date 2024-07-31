@@ -65,7 +65,7 @@ app.use(express.urlencoded({ extended: true }));
 // Set EJS as the view engine
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', __dirname + '/views');
 
 // Set up storage engine for file uploads using multer
 const storage = multer.diskStorage({
@@ -170,6 +170,9 @@ function setCachedUsers(users) {
 // Route to render the index page
 app.get('/', async (req, res) => {
   try {
+    const result = await pgPool.query('SELECT * FROM users');
+    const users = result.rows;
+
     // Read the list of files in the uploads directory
     fs.readdir('./uploads', (err, files) => {
       if (err) {
@@ -178,8 +181,8 @@ app.get('/', async (req, res) => {
         return;
       }
 
-      // Render the index page with the list of files
-      res.render('index', { files: files, users: [] }); // Added users: [] for compatibility
+      // Render the index page with the list of files and users
+      res.render('index', { users: users, files: files });
     });
   } catch (error) {
     console.error('PostgreSQL Error:', error);
@@ -222,7 +225,6 @@ app.post('/users/delete/:id', async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });
