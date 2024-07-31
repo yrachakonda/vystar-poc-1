@@ -114,17 +114,6 @@ app.post('/upload', (req, res) => {
     }
   });
 });
-
-// Routes for file download
-app.get('/download/:filename', (req, res) => {
-  const file = `${__dirname}/uploads/${req.params.filename}`;
-  res.download(file, (err) => {
-    if (err) {
-      res.status(404).send({ message: 'File not found!' });
-    }
-  });
-});
-
 // Route to render the index page
 app.get('/', async (req, res) => {
   try {
@@ -144,8 +133,15 @@ app.get('/', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-
+// Routes for file download
+app.get('/download/:filename', (req, res) => {
+  const file = `${__dirname}/uploads/${req.params.filename}`;
+  res.download(file, (err) => {
+    if (err) {
+      res.status(404).send({ message: 'File not found!' });
+    }
+  });
+});
 // Existing routes
 app.get('/json', async (req, res) => {
   try {
