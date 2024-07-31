@@ -114,25 +114,7 @@ app.post('/upload', (req, res) => {
     }
   });
 });
-// Route to render the index page
-app.get('/', async (req, res) => {
-  try {
-    // Read the list of files in the uploads directory
-    fs.readdir('./uploads', (err, files) => {
-      if (err) {
-        console.error('Error reading upload directory:', err);
-        res.status(500).send('Internal Server Error');
-        return;
-      }
 
-      // Render the index page with the list of files
-      res.render('index', { files: files });
-    });
-  } catch (error) {
-    console.error('PostgreSQL Error:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
 // Routes for file download
 app.get('/download/:filename', (req, res) => {
   const file = `${__dirname}/uploads/${req.params.filename}`;
@@ -142,6 +124,7 @@ app.get('/download/:filename', (req, res) => {
     }
   });
 });
+
 // Existing routes
 app.get('/json', async (req, res) => {
   try {
