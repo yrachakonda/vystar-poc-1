@@ -41,5 +41,13 @@
             <input type="file" name="myFile" />
             <input type='submit' value='Upload!' />
     </form>
+  <h2>Uploaded Files</h2>
+    <ul id="fileList">
+        <% files.forEach(function(file) { %>
+            <li>
+                <a href="/download/<%= file %>"><%= file %></a>
+            </li>
+        <% }); %>
+    </ul>
 </body>
 </html>
