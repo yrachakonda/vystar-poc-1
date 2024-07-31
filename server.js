@@ -17,7 +17,7 @@ const pgPool = new Pool({
   password: process.env.PG_PASSWORD,
   port: process.env.PG_PORT || 5432,
   ssl: {
-    rejectUnauthorized: false  // This will allow self-signed certificates. For production, you should use a CA signed certificate.
+    rejectUnauthorized: false  // This will allow self-signed certificates. For production, use a CA signed certificate.
   }
 });
 
@@ -28,10 +28,11 @@ const redisClient = redis.createClient({
   password: process.env.REDIS_PASSWORD,
   socket: {
     tls: false,
-    rejectUnauthorized: false // This should be adjusted based on your security requirements
+    rejectUnauthorized: false // Adjust based on your security requirements
   }
 });
 
+// Connect to PostgreSQL
 async function connectToDatabase() {
   try {
     const client = await pgPool.connect();
@@ -43,10 +44,12 @@ async function connectToDatabase() {
   }
 }
 
+// Attempt to connect to the database
 connectToDatabase().catch(error => {
   console.error('Error:', error.message);
 });
 
+// Redis event listeners
 redisClient.on('connect', () => {
   console.log('Connected to Redis');
 });
@@ -55,7 +58,7 @@ redisClient.on('error', (rderr) => {
   console.error('Redis Cache Connection Error:', rderr);
 });
 
-// Middleware to parse JSON requests
+// Middleware to parse JSON and URL-encoded requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -64,7 +67,7 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
 
-// Set up storage engine for file uploads
+// Set up storage engine for file uploads using multer
 const storage = multer.diskStorage({
   destination: './uploads/',
   filename: function (req, file, cb) {
@@ -72,7 +75,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// Init upload
+// Initialize multer for single file uploads
 const upload = multer({
   storage: storage,
   limits: { fileSize: 1000000 }, // limit file size to 1MB
@@ -81,13 +84,13 @@ const upload = multer({
   }
 }).single('myFile');
 
-// Check file type
+// Check file type for uploads
 function checkFileType(file, cb) {
-  // Allowed ext
+  // Allowed file extensions
   const filetypes = /jpeg|jpg|png|gif|pdf/;
-  // Check ext
+  // Check the file extension
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // Check mime
+  // Check the MIME type
   const mimetype = filetypes.test(file.mimetype);
 
   if (mimetype && extname) {
@@ -97,7 +100,7 @@ function checkFileType(file, cb) {
   }
 }
 
-// Routes for file upload
+// Route for file uploads
 app.post('/upload', (req, res) => {
   upload(req, res, (err) => {
     if (err) {
@@ -115,7 +118,7 @@ app.post('/upload', (req, res) => {
   });
 });
 
-// Routes for file download
+// Route for file downloads
 app.get('/download/:filename', (req, res) => {
   const file = `${__dirname}/uploads/${req.params.filename}`;
   res.download(file, (err) => {
@@ -125,7 +128,7 @@ app.get('/download/:filename', (req, res) => {
   });
 });
 
-// Existing routes
+// Route to get JSON data, checking Redis cache first
 app.get('/json', async (req, res) => {
   try {
     // Check if data is in Redis cache
@@ -164,17 +167,27 @@ function setCachedUsers(users) {
   redisClient.set('users', JSON.stringify(users));
 }
 
+// Route to render the index page
 app.get('/', async (req, res) => {
   try {
-    const result = await pgPool.query('SELECT * FROM users');
-    const users = result.rows;
-    res.render('index', { users });
+    // Read the list of files in the uploads directory
+    fs.readdir('./uploads', (err, files) => {
+      if (err) {
+        console.error('Error reading upload directory:', err);
+        res.status(500).send('Internal Server Error');
+        return;
+      }
+
+      // Render the index page with the list of files
+      res.render('index', { files: files });
+    });
   } catch (error) {
     console.error('PostgreSQL Error:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
+// Route to add a new user
 app.post('/users', async (req, res) => {
   const { name, email } = req.body;
 
@@ -192,6 +205,7 @@ app.post('/users', async (req, res) => {
   }
 });
 
+// Route to delete a user
 app.post('/users/delete/:id', async (req, res) => {
   const userId = req.params.id;
 
@@ -206,14 +220,3 @@ app.post('/users/delete/:id', async (req, res) => {
     console.error('PostgreSQL Error:', error);
     res.status(500).send('Internal Server Error');
   }
-});
-
-// Handle invalid routes
-app.use((req, res) => {
-  res.status(404).send('Not Found');
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
