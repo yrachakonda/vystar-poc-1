@@ -32,32 +32,14 @@
       </li>
     <% }); %>
   </ul>
-
   <h1>File Upload</h1>
-  
-  <!-- Form for uploading files -->
-  <form ref='uploadForm' 
-      id='uploadForm' 
-      action='/upload' 
-      method='post' 
-      encType="multipart/form-data">
-      <!-- File input field -->
-      <input type="file" name="myFile" />
-      <!-- Submit button -->
-      <input type='submit' value='Upload!' />
-  </form>
-
-  <h2>Uploaded Files</h2>
-  <!-- List of uploaded files -->
-  <ul id="fileList">
-      <% files.forEach(function(file) { %>
-          <!-- List item with a link to download the file -->
-          <li>
-              <a href="/download/<%= file %>"><%= file %></a>
-          </li>
-      <% }); %>
-  </ul>
-
+    <form ref='uploadForm' 
+        id='uploadForm' 
+        action='/upload' 
+        method='post' 
+        encType="multipart/form-data">
+            <input type="file" name="myFile" />
+            <input type='submit' value='Upload!' />
+    </form>
 </body>
 </html>
-
