@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      context: ./app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - cache
+    environment:
+      PG_USER: your_pg_user
+      PG_HOST: db
+      PG_DATABASE: your_pg_database
+      PG_PASSWORD: your_pg_password
+      PG_PORT: 5432
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: your_redis_password
+      FILE_UPLOAD_LOCATION: /mnt/uploads
+    volumes:
+      - ./run-time/uploads:/mnt/uploads
+
+  db:
+    image: postgres:12.19
+    environment:
+      POSTGRES_USER: your_pg_user
+      POSTGRES_PASSWORD: your_pg_password
+      POSTGRES_DB: your_pg_database
+    volumes:
+      - ./run-time/db-init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+
+  cache:
+    image: redis:latest
+    command: ["redis-server", "--requirepass", "your_redis_password"]
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
